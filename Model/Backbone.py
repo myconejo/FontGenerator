@@ -29,8 +29,11 @@ def deconv2d(c_in, c_out, k_size=3, stride=1, pad=1, dilation=1, bn=True, dropou
 class Generator(nn.Module):
     def __init__(self, input_dim=1, conv_dim=64):
         super(Generator, self).__init__()
+
+        # Encoder and Decoder
         self.encoder_model = Encoder()
-        self.decoder_mode = Decoder()
+        self.decoder_model = Decoder()
+
     def forward(self, input, font_embed):
         encoder_result, encoder_dict = self.encoder_model(input)
         embedded = torch.cat((encoder_result, font_embed), dim=1)
@@ -40,8 +43,11 @@ class Generator(nn.Module):
 # ENCODER
 class Encoder(nn.Module):
     def __init__(self, input_dim=1, conv_dim=64):
+        # Convolutional Layers
         self.conv1 = nn.Conv2d(input_dim, conv_dim, kernel_size=5, stride=2, padding=2, dilation=2)
         self.conv2 = nn.Conv2d(conv_dim, conv_dim*2, kernel_size=5, stride=2, padding=2, dilation=2)
+
+        # Helper Function
         self.bn2 = nn.BatchNorm2d(conv_dim)
         self.lrelu = nn.LeakyReLU(0.2)
         
@@ -55,18 +61,19 @@ class Encoder(nn.Module):
 # DECODER
 class Decoder(nn.Module):
     def __init__(self, input_dim=1, conv_dim=64):
+        # Deconvolution Layers
         self.deconv1 = nn.ConvTranspose2d(conv_dim*10, conv_dim*8, kernel_size=3)
         self.deconv2 = nn.Conv2d(conv_dim*16, conv_dim*8, kernel_size=5, stride=2, padding=2,dilation=2)
+
+        # Helper Methods
         self.bn2 = nn.BatchNorm2d(conv_dim*8)
         self.lrelu = nn.LeakyReLU()
         self.dropout = nn.Dropout()
         
     def forward(self, input, encoder_dict):
         output1 = self.deconv1(input)
-        
         output2 = self.dropout(self.bn2(self.deconv2(self.lrelu(output1))))
         output2 = torch.cat((output2, encoder_dict['enc7']), dim=1)
-        
         output = torch.tanh(output2)
         return output   
 
@@ -85,7 +92,7 @@ class Discriminator(nn.Module):
         self.fc1 = nn.Linear(512*disc_dim, 1)
         self.fc2 = nn.Linear(512*disc_dim, category_num)
         
-        # Supplementary Methods
+        # Helper Methods
         self.lrelu = nn.LeakyReLU(0.2)
         self.bnorm = nn.BatchNorm2d()
         self.dropout = nn.Dropout()
@@ -101,6 +108,9 @@ class Discriminator(nn.Module):
         # resize the output to match the fc layer
         output = output.reshape(batch_size, -1)
         
+        # compute the losses:
+        ## tf_loss:     loss from the image
+        ## cat_loss:    loss from the category of the fonts
         tf_loss_logit = self.fc1(output)
         tf_loss = torch.sigmoid(tf_loss_logit)
         cat_loss = self.fc2(output)
