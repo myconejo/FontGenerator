@@ -15,7 +15,7 @@ def conv2d(c_in, c_out, k_size=3, stride=2, pad=1, dilation=1, bn=True, lrelu=Tr
 # deconv2d: nn.Conv2d with Batch Normalization and Dropout
 def deconv2d(c_in, c_out, k_size=3, stride=1, pad=1, dilation=1, bn=True, dropout=False, p=0.5):
     layers = []
-    layers.append(nn.LeakyReLU(0.2))
+    layers.append(nn.LeakyReLU(0.2))     # set leaky param as 0.2
     layers.append(nn.ConvTranspose2d(c_in, c_out, k_size, stride, pad))
     if bn:
         layers.append(nn.BatchNorm2d(c_out))
@@ -29,7 +29,6 @@ def deconv2d(c_in, c_out, k_size=3, stride=1, pad=1, dilation=1, bn=True, dropou
 class Generator(nn.Module):
     def __init__(self, input_dim=1, conv_dim=64):
         super(Generator, self).__init__()
-
         # Encoder and Decoder
         self.encoder_model = Encoder()
         self.decoder_model = Decoder()
@@ -42,6 +41,8 @@ class Generator(nn.Module):
         
 # ENCODER
 class Encoder(nn.Module):
+    # input_dim:    number of images
+    # conv_dim:     
     def __init__(self, input_dim=1, conv_dim=64):
         # Convolutional Layers
         self.conv1 = nn.Conv2d(input_dim, conv_dim, kernel_size=5, stride=2, padding=2, dilation=2)
@@ -60,10 +61,12 @@ class Encoder(nn.Module):
     
 # DECODER
 class Decoder(nn.Module):
+    # input_dim:    number of images
+    # conv_dim:     
     def __init__(self, input_dim=1, conv_dim=64):
         # Deconvolution Layers
         self.deconv1 = nn.ConvTranspose2d(conv_dim*10, conv_dim*8, kernel_size=3)
-        self.deconv2 = nn.Conv2d(conv_dim*16, conv_dim*8, kernel_size=5, stride=2, padding=2,dilation=2)
+        self.deconv2 = nn.Conv2d(conv_dim*16, conv_dim*8, kernel_size=5, stride=2, padding=2, dilation=2)
 
         # Helper Methods
         self.bn2 = nn.BatchNorm2d(conv_dim*8)
@@ -79,7 +82,10 @@ class Decoder(nn.Module):
 
 # DISCRIMINATOR
 class Discriminator(nn.Module):
-    def __init__(self, category_num, img_dim=3, disc_dim=64):
+    # category_num: number of categories for the fonts
+    # img_dim:      dimension of the image (generated image + groud-truth image)
+    # disc_dim:     dimension of the discriminator (64 from the decoder)
+    def __init__(self, category_num, img_dim=2, disc_dim=64):
         super(Discriminator, self).__init__()
         
         # Convolutional Layers
