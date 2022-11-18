@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 #from .function import conv2d, deconv2d, lrelu, fc, embedding_lookup
 import warnings
+import numpy as np
 from torchsummary import summary
 warnings.filterwarnings("ignore")
 def batch_norm(c_out, momentum=0.1):

@@ -37,7 +37,7 @@ class Generator(nn.Module):
         encoder_result, encoder_dict = self.encoder_model(input)
         embedded = torch.cat((encoder_result, font_embed), dim=1)
         decoder_result = self.decoder_model(embedded, encoder_dict)
-        return decoder_result
+        return decoder_result, encoder_result
         
 # ENCODER
 class Encoder(nn.Module):
