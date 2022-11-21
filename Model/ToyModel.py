@@ -90,9 +90,7 @@ def Generator(images, En, De, embeddings, embedding_ids, GPU=False, encode_layer
     else:
         return fake_target, encoded_source
 
-
 class Encoder(nn.Module):
-    
     def __init__(self, img_dim=1, conv_dim=64):
         super(Encoder, self).__init__()
         self.conv1 = conv2d(img_dim, conv_dim, k_size=5, stride=2, pad=2, dilation=2, lrelu=False, bn=False)
@@ -128,7 +126,7 @@ class Encoder(nn.Module):
     
     
 class Decoder(nn.Module):
-    
+
     def __init__(self, img_dim=1, embedded_dim=640, conv_dim=64):
         super(Decoder, self).__init__()
         self.deconv1 = deconv2d(embedded_dim, conv_dim*8, dropout=True)
@@ -186,8 +184,10 @@ class Discriminator(nn.Module):
         
         return tf_loss, tf_loss_logit, cat_loss
     
-nn1 = Encoder().cuda()
+# nn1 = Encoder().cuda()
+nn1 = Encoder()
 summary(nn1, (1,128,128))
 
-nn2 = Discriminator(50).cuda()
+#nn2 = Discriminator(50).cuda()
+nn2 = Discriminator(50)
 summary(nn2,(2,128,128))
