@@ -1,18 +1,24 @@
 import torch
 import torch.nn as nn
+from Embedding.py import get_batch_embedding
 
-###################################### HELPER FUNCTIONS ######################################
-# conv2d: nn.Conv2d with Leaky ReLU and Batch Normalization
+if torch.cuda.is_available():
+    device = torch.cuda.get_device_name(0)
+else :
+    device = 'cpu()'
+
+# Helper Functions
+## conv2d: nn.Conv2d with Leaky ReLU and Batch Normalization
 def conv2d(c_in, c_out, k_size=3, stride=2, pad=1, dilation=1, bn=True, lrelu=True, leak=0.2):
     layers = []
     if lrelu:
-        layers.append(nn.LeakyReLU(leak))
+        layers.append(nn.LeakyReLU(leak)).to(device)
     layers.append(nn.Conv2d(c_in, c_out, k_size, stride, pad))
     if bn:
-        layers.append(nn.BatchNorm2d(c_out))
+        layers.append(nn.BatchNorm2d(c_out)).to(device)
     return nn.Sequential(*layers)
 
-# deconv2d: nn.Conv2d with Batch Normalization and Dropout
+## deconv2d: nn.Conv2d with Batch Normalization and Dropout
 def deconv2d(c_in, c_out, k_size=3, stride=1, pad=1, dilation=1, bn=True, dropout=False, p=0.5):
     layers = []
     layers.append(nn.LeakyReLU(0.2))     # set leaky param as 0.2
@@ -23,62 +29,165 @@ def deconv2d(c_in, c_out, k_size=3, stride=1, pad=1, dilation=1, bn=True, dropou
         layers.append(nn.Dropout(p))
     return nn.Sequential(*layers)
 
-###################################### HELPER FUNCTIONS ######################################
-
 # GENERATOR
-class Generator(nn.Module):
-    def __init__(self, input_dim=1, conv_dim=64):
-        super(Generator, self).__init__()
+class BaseGenerator(nn.Module):
+    def __init__(self, input_dim=1, conv_dim=64, learnembed=False, category_num = 50, embedding_dim = 128):
+        super(BaseGenerator, self).__init__()
         # Encoder and Decoder
-        self.encoder_model = Encoder()
-        self.decoder_model = Decoder()
+        self.encoder_model = BaseEncoder()
+        self.category_num = category_num
+        self.learnembed = learnembed
+        embedding_dim = conv_dim*2
+        if(learnembed):
+            self.embed_layer = nn.Embedding(category_num, embedding_dim)
+        self.decoder_model = BaseDecoder()
 
-    def forward(self, input, font_embed):
+    def forward(self, input, font_nums, embedding):
         encoder_result, encoder_dict = self.encoder_model(input)
+        if(self.learnembed):
+            font_embed = self.embed_layer(font_nums)
+        else:
+            font_embed = get_batch_embedding(len(font_nums), font_nums, embedding, self.embedding_dim)
         embedded = torch.cat((encoder_result, font_embed), dim=1)
         decoder_result = self.decoder_model(embedded, encoder_dict)
         return decoder_result, encoder_result
         
 # ENCODER
-class Encoder(nn.Module):
+class BaseEncoder(nn.Module):
     # input_dim:    number of images
     # conv_dim:     
     def __init__(self, input_dim=1, conv_dim=64):
+        super(BaseEncoder, self).__init__()
         # Convolutional Layers
-        self.conv1 = nn.Conv2d(input_dim, conv_dim, kernel_size=5, stride=2, padding=2, dilation=2)
-        self.conv2 = nn.Conv2d(conv_dim, conv_dim*2, kernel_size=5, stride=2, padding=2, dilation=2)
-
-        # Helper Function
-        self.bn2 = nn.BatchNorm2d(conv_dim)
-        self.lrelu = nn.LeakyReLU(0.2)
+        self.conv1 = conv2d(input_dim, conv_dim, k_size=5, stride=2, pad=2, dilation=2, lrelu=False, bn=False)
+        self.conv2 = conv2d(conv_dim, conv_dim*2, k_size=5, stride=2, pad=2, dilation=2)
+        self.conv3 = conv2d(conv_dim*2, conv_dim*4, k_size=4, stride=2, pad=1, dilation=1)
+        self.conv4 = conv2d(conv_dim*4, conv_dim*8)
+        self.conv5 = conv2d(conv_dim*8, conv_dim*8)
+        self.conv6 = conv2d(conv_dim*8, conv_dim*8)
+        self.conv7 = conv2d(conv_dim*8, conv_dim*8)
+        self.conv8 = conv2d(conv_dim*8, conv_dim*8)
         
     def forward(self, input):
-        encoder_dict = dict()
-        output1 = self.conv1(input)
-        encoder_dict['enc1']=output1
-        output = self.bn2(self.conv2(self.lrelu(output1)))
-        return output, encoder_dict
+        encode_dicts = dict()
+        e1 = self.conv1(input)
+        encode_dicts['e1'] = e1
+        e2 = self.conv2(e1)
+        encode_dicts['e2'] = e2
+        e3 = self.conv3(e2)
+        encode_dicts['e3'] = e3
+        e4 = self.conv4(e3)
+        encode_dicts['e4'] = e4
+        e5 = self.conv5(e4)
+        encode_dicts['e5'] = e5
+        e6 = self.conv6(e5)
+        encode_dicts['e6'] = e6
+        e7 = self.conv7(e6)
+        encode_dicts['e7'] = e7
+        encoded_source = self.conv8(e7)
+        encode_dicts['e8'] = encoded_source
+
+        return encoded_source, encode_dicts
+
+class SimpleEncoder(nn.Module):
+    def __init__(self, input_dim=1, conv_dim=64):
+        super(SimpleEncoder, self).__init__()
+        # Convolutional Layers
+        self.conv1 = conv2d(input_dim, conv_dim, k_size=5, stride=2, pad=2, dilation=2, lrelu=False, bn=False)
+        self.conv2 = conv2d(conv_dim, conv_dim*2, k_size=5, stride=4, pad=2, dilation=2)
+        self.conv3 = conv2d(conv_dim*2, conv_dim*4)
+        self.conv4 = conv2d(conv_dim*4, conv_dim*8)
+        self.conv5 = conv2d(conv_dim*8, conv_dim*8)
+        self.conv6 = conv2d(conv_dim*8, conv_dim*8)
+        self.conv7 = conv2d(conv_dim*8, conv_dim*8)
+        
+    def forward(self, input):
+        encode_dicts = dict()
+        e1 = self.conv1(input)
+        encode_dicts['e1'] = e1
+        e2 = self.conv2(e1)
+        encode_dicts['e2'] = e2
+        e3 = self.conv3(e2)
+        encode_dicts['e3'] = e3
+        e4 = self.conv4(e3)
+        encode_dicts['e4'] = e4
+        e5 = self.conv5(e4)
+        encode_dicts['e5'] = e5
+        e6 = self.conv6(e5)
+        encode_dicts['e6'] = e6
+        encoded_source = self.conv7(e6)
+        encode_dicts['e7'] = encoded_source
+
+        return encoded_source, encode_dicts
     
 # DECODER
-class Decoder(nn.Module):
-    # input_dim:    number of images
-    # conv_dim:     
-    def __init__(self, input_dim=1, conv_dim=64):
-        # Deconvolution Layers
-        self.deconv1 = nn.ConvTranspose2d(conv_dim*10, conv_dim*8, kernel_size=3)
-        self.deconv2 = nn.Conv2d(conv_dim*16, conv_dim*8, kernel_size=5, stride=2, padding=2, dilation=2)
+class BaseDecoder(nn.Module):
 
-        # Helper Methods
-        self.bn2 = nn.BatchNorm2d(conv_dim*8)
-        self.lrelu = nn.LeakyReLU()
-        self.dropout = nn.Dropout()
+    def __init__(self, img_dim=1, embedded_dim=640, conv_dim=64):
+        super(BaseDecoder, self).__init__()
+        self.deconv1 = deconv2d(embedded_dim, conv_dim*8, dropout=True)
+        self.deconv2 = deconv2d(conv_dim*16, conv_dim*8, dropout=True, k_size=4)
+        self.deconv3 = deconv2d(conv_dim*16, conv_dim*8, k_size=5, dilation=2, dropout=True)
+        self.deconv4 = deconv2d(conv_dim*16, conv_dim*8, k_size=4, dilation=2, stride=2)
+        self.deconv5 = deconv2d(conv_dim*16, conv_dim*4, k_size=4, dilation=2, stride=2)
+        self.deconv6 = deconv2d(conv_dim*8, conv_dim*2, k_size=4, dilation=2, stride=2)
+        self.deconv7 = deconv2d(conv_dim*4, conv_dim*1, k_size=4, dilation=2, stride=2)
+        self.deconv8 = deconv2d(conv_dim*2, img_dim, k_size=4, dilation=2, stride=2, bn=False)
+    
+    
+    def forward(self, embedded, encode_dicts):
+        d1 = self.deconv1(embedded)
+        d1 = torch.cat((d1, encode_dicts['e7']), dim=1)
+        d2 = self.deconv2(d1)
+        d2 = torch.cat((d2, encode_dicts['e6']), dim=1)
+        d3 = self.deconv3(d2)
+        d3 = torch.cat((d3, encode_dicts['e5']), dim=1)
+        d4 = self.deconv4(d3)
+        d4 = torch.cat((d4, encode_dicts['e4']), dim=1)
+        d5 = self.deconv5(d4)
+        d5 = torch.cat((d5, encode_dicts['e3']), dim=1)
+        d6 = self.deconv6(d5)
+        d6 = torch.cat((d6, encode_dicts['e2']), dim=1)
+        d7 = self.deconv7(d6)
+        d7 = torch.cat((d7, encode_dicts['e1']), dim=1)
+        d8 = self.deconv8(d7)        
+        fake_target = torch.tanh(d8)
         
-    def forward(self, input, encoder_dict):
-        output1 = self.deconv1(input)
-        output2 = self.dropout(self.bn2(self.deconv2(self.lrelu(output1))))
-        output2 = torch.cat((output2, encoder_dict['enc7']), dim=1)
-        output = torch.tanh(output2)
-        return output   
+        return fake_target
+
+# DECODER
+class SimpleDecoder(nn.Module):
+
+    def __init__(self, img_dim=1, embedded_dim=640, conv_dim=64):
+        super(BaseDecoder, self).__init__()
+        self.deconv1 = deconv2d(embedded_dim, conv_dim*8, dropout=True)
+        self.deconv2 = deconv2d(conv_dim*16, conv_dim*8, dropout=True, k_size=4)
+        self.deconv3 = deconv2d(conv_dim*16, conv_dim*8, k_size=5, dilation=2, dropout=True)
+        self.deconv4 = deconv2d(conv_dim*16, conv_dim*8, k_size=4, dilation=2, stride=2)
+        self.deconv5 = deconv2d(conv_dim*16, conv_dim*4, k_size=4, dilation=2, stride=2)
+        self.deconv6 = deconv2d(conv_dim*8, conv_dim*2, k_size=4, dilation=2, stride=2)
+        self.deconv7 = deconv2d(conv_dim*4, conv_dim*1, k_size=4, dilation=2, stride=2)
+        self.deconv8 = deconv2d(conv_dim*2, img_dim, k_size=4, dilation=2, stride=2, bn=False)
+    
+    def forward(self, embedded, encode_dicts):
+        d1 = self.deconv1(embedded)
+        d1 = torch.cat((d1, encode_dicts['e7']), dim=1)
+        d2 = self.deconv2(d1)
+        d2 = torch.cat((d2, encode_dicts['e6']), dim=1)
+        d3 = self.deconv3(d2)
+        d3 = torch.cat((d3, encode_dicts['e5']), dim=1)
+        d4 = self.deconv4(d3)
+        d4 = torch.cat((d4, encode_dicts['e4']), dim=1)
+        d5 = self.deconv5(d4)
+        d5 = torch.cat((d5, encode_dicts['e3']), dim=1)
+        d6 = self.deconv6(d5)
+        d6 = torch.cat((d6, encode_dicts['e2']), dim=1)
+        d7 = self.deconv7(d6)
+        d7 = torch.cat((d7, encode_dicts['e1']), dim=1)
+        d8 = self.deconv8(d7)        
+        fake_target = torch.tanh(d8)
+        
+        return fake_target
 
 # DISCRIMINATOR
 class Discriminator(nn.Module):
@@ -89,14 +198,14 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
         
         # Convolutional Layers
-        self.conv1 = nn.Conv2d(img_dim, disc_dim, kernel_size=3, stride=2, pad=1, dilation=1)
-        self.conv2 = nn.Conv2d(disc_dim, 2*disc_dim, kernel_size=3, stride=2, pad=1, dilation=1)
-        self.conv3 = nn.Conv2d(2*disc_dim, 4*disc_dim, kernel_size=3, stride=2, pad=1, dilation=1)
-        self.conv4 = nn.Conv2d(4*disc_dim, 8*disc_dim, kernel_size=3, stride=2, pad=1, dilation=1)
+        self.conv1 = conv2d(img_dim, disc_dim, bn=False)
+        self.conv2 = conv2d(disc_dim, disc_dim*2)
+        self.conv3 = conv2d(disc_dim*2, disc_dim*4)
+        self.conv4 = conv2d(disc_dim*4, disc_dim*8)
         
         # Fully Connected (Linear) Layers
-        self.fc1 = nn.Linear(512*disc_dim, 1)
-        self.fc2 = nn.Linear(512*disc_dim, category_num)
+        self.fc1 = nn.Linear(disc_dim*8*8*8, 1)
+        self.fc2 = nn.Linear(disc_dim*8*8*8, category_num)
         
         # Helper Methods
         self.lrelu = nn.LeakyReLU(0.2)
