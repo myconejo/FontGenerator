@@ -1,21 +1,21 @@
 import torch
 import torch.nn as nn
-from Embedding.py import get_batch_embedding
+from Util.Embedding import get_batch_embedding
 
 if torch.cuda.is_available():
-    device = torch.cuda.get_device_name(0)
+    device = torch.device('cuda:0')
 else :
-    device = 'cpu()'
+    device = torch.device('cpu')
 
 # Helper Functions
 ## conv2d: nn.Conv2d with Leaky ReLU and Batch Normalization
 def conv2d(c_in, c_out, k_size=3, stride=2, pad=1, dilation=1, bn=True, lrelu=True, leak=0.2):
     layers = []
     if lrelu:
-        layers.append(nn.LeakyReLU(leak)).to(device)
-    layers.append(nn.Conv2d(c_in, c_out, k_size, stride, pad))
+        layers.append(nn.LeakyReLU(leak).to(device))
+    layers.append(nn.Conv2d(c_in, c_out, k_size, stride, pad).to(device))
     if bn:
-        layers.append(nn.BatchNorm2d(c_out)).to(device)
+        layers.append(nn.BatchNorm2d(c_out).to(device))
     return nn.Sequential(*layers)
 
 ## deconv2d: nn.Conv2d with Batch Normalization and Dropout
@@ -27,7 +27,7 @@ def deconv2d(c_in, c_out, k_size=3, stride=1, pad=1, dilation=1, bn=True, dropou
         layers.append(nn.BatchNorm2d(c_out))
     if dropout:
         layers.append(nn.Dropout(p))
-    return nn.Sequential(*layers)
+    return nn.Sequential(*layers).to(device)
 
 # GENERATOR
 class BaseGenerator(nn.Module):
@@ -157,9 +157,8 @@ class BaseDecoder(nn.Module):
 
 # DECODER
 class SimpleDecoder(nn.Module):
-
     def __init__(self, img_dim=1, embedded_dim=640, conv_dim=64):
-        super(BaseDecoder, self).__init__()
+        super(SimpleDecoder, self).__init__()
         self.deconv1 = deconv2d(embedded_dim, conv_dim*8, dropout=True)
         self.deconv2 = deconv2d(conv_dim*16, conv_dim*8, dropout=True, k_size=4)
         self.deconv3 = deconv2d(conv_dim*16, conv_dim*8, k_size=5, dilation=2, dropout=True)
@@ -206,11 +205,6 @@ class Discriminator(nn.Module):
         # Fully Connected (Linear) Layers
         self.fc1 = nn.Linear(disc_dim*8*8*8, 1)
         self.fc2 = nn.Linear(disc_dim*8*8*8, category_num)
-        
-        # Helper Methods
-        self.lrelu = nn.LeakyReLU(0.2)
-        self.bnorm = nn.BatchNorm2d()
-        self.dropout = nn.Dropout()
         
     def forward(self, images):
         # image: generated or sample data images for the discriminator
