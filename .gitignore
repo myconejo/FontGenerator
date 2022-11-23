@@ -1,2 +1,4 @@
-Util/Font/
+Util/Font/*
 Util/Font.zip
+.vscode*
+*.pt
