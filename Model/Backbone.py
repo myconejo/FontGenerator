@@ -28,26 +28,43 @@ def deconv2d(c_in, c_out, k_size=3, stride=1, pad=1, dilation=1, bn=True, dropou
         layers.append(nn.Dropout(p))
     return nn.Sequential(*layers)
 
+
+def Generator(images, En, De,font_nums, embed_layer, encode_layers=False, category_num = 50, embedding_dim=128):
+    encoded_source, encode_layers = En(images)
+    font_embed = embed_layer(torch.IntTensor(font_nums).to(device))
+    font_embed = font_embed.reshape(len(font_nums), embedding_dim, 1, 1)
+    embedded = torch.cat((encoded_source, font_embed), 1)
+    fake_target = De(embedded, encode_layers)
+    if encode_layers:
+        return fake_target, encoded_source, encode_layers
+    else:
+        return fake_target, encoded_source
+
+
 # GENERATOR
 class BaseGenerator(nn.Module):
-    def __init__(self, input_dim=1, conv_dim=64, learnembed=False, category_num = 50, embedding_dim = 128):
+    def __init__(self,En, De, input_dim=1, conv_dim=64, learnembed=False, category_num = 50, embedding_dim = 128):
         super(BaseGenerator, self).__init__()
         # Encoder and Decoder
-        self.encoder_model = BaseEncoder()
+        #self.encoder_model = BaseEncoder()
+        self.encoder_model = En
         self.category_num = category_num
         self.learnembed = learnembed
         self.embedding_dim = conv_dim*2
         if(learnembed):
             self.embed_layer = nn.Embedding(category_num, self.embedding_dim)
-        self.decoder_model = BaseDecoder()
+        #self.decoder_model = BaseDecoder()
+        self.decoder_model = De
 
     def forward(self, input, font_nums, embedding):
         encoder_result, encoder_dict = self.encoder_model(input)
         if(self.learnembed):
-            font_embed = self.embed_layer(font_nums)
+            font_embed = self.embed_layer(torch.IntTensor(font_nums).to(device))
+            font_embed = font_embed.reshape(len(font_nums), self.embedding_dim, 1, 1)
         else:
             font_embed = get_batch_embedding(len(font_nums), font_nums, embedding, self.embedding_dim).to(device)
-        embedded = torch.cat((encoder_result, font_embed), dim=1)
+        embedded=torch.concat((encoder_result, font_embed),dim=1)
+        #print(embedded.shape)
         decoder_result = self.decoder_model(embedded, encoder_dict)
         return decoder_result, encoder_result
         

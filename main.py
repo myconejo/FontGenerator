@@ -1,25 +1,33 @@
-from Util.FontLoader import font_loader, font_single_loader
-from Util.fontdataprovider import FontDataProvider
 import numpy as np
-import matplotlib.pyplot as plt
+import os, datetime, time, glob
+import sys
+cur_path = os.getcwd()
+sys.path.insert(0,cur_path)
+
+import torch
+from Model.Backbone import BaseGenerator, Discriminator, BaseEncoder, SimpleDecoder, SimpleEncoder, BaseDecoder
+from Util.fontdataprovider import FontDataProvider
+from Model.Embedding import embedding_tensor_generate
+from Util.FontLoader import train_loader, val_loader
 
 
-dp = FontDataProvider(".")
-
-all = dp.all_list
-train = dp.train_list
-source = dp.source_list
-valid = dp.val_list
-
-print(train.shape, train[:10,0],train[:10,1],np.array(train[0][2]).shape)
-print(valid.shape)
-print(source.shape, source[:10,0],source[:10,1],np.array(source[0][2]).shape)
-plt.figure(figsize=(1,2))
-plt.imshow(np.array(source[0][2]),cmap='gray')
-plt.show()
+model_path = os.path.join(cur_path,"results\\ckpt\\")
+if torch.cuda.is_available():
+    device = torch.device('cuda:0')
+else:
+    device = torch.device('cpu')
 
 
-#font_path = "./GeneratedFontImage"
-#font_single_loader("a",font_path,"arial",0, verbose=True)
-#font_loader("arial", verbose=True)
-#font_loader("arial")
+category_num=25
+
+Enc = BaseEncoder().to(device) 
+#embed_layer = nn.Embedding(category_num, 128)
+Dec = BaseDecoder().to(device)
+Enc.load_state_dict(torch.load(os.path.join(model_path, f"Enctest.pt")))
+Dec.load_state_dict(torch.load(os.path.join(model_path, f"Dectest.pt")))
+    
+Gen = BaseGenerator(Enc, Dec,category_num = category_num, learnembed = True).to(device) 
+Gen.load_state_dict(torch.load(os.path.join(model_path, f"Gentest.pt")))
+Dis = Discriminator(category_num=category_num).to(device)
+Dis.load_state_dict(torch.load(os.path.join(model_path, f"Dixtest.pt")))
+

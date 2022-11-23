@@ -2,11 +2,12 @@ import torch
 #import torch.nn as nn
 import numpy as np
 
-
+#generate embedding for each category with random function.
 def embedding_tensor_generate(category_num, embedding_dim, stddev=0.01):
     embedding_tensor = torch.randn([category_num,1,1,embedding_dim]) * stddev
     return embedding_tensor
 
+#make embedding for each category
 def get_batch_embedding(batch_num, font_nums, embedding, embedding_dim):
     batch_embed = []
     for num in font_nums:
