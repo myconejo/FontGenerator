@@ -1,21 +1,21 @@
 import torch
 import torch.nn as nn
-from Util.Embedding import get_batch_embedding
+from Model.Embedding import get_batch_embedding
+
 
 if torch.cuda.is_available():
     device = torch.device('cuda:0')
 else :
     device = torch.device('cpu')
-
 # Helper Functions
 ## conv2d: nn.Conv2d with Leaky ReLU and Batch Normalization
 def conv2d(c_in, c_out, k_size=3, stride=2, pad=1, dilation=1, bn=True, lrelu=True, leak=0.2):
     layers = []
     if lrelu:
-        layers.append(nn.LeakyReLU(leak).to(device))
-    layers.append(nn.Conv2d(c_in, c_out, k_size, stride, pad).to(device))
+        layers.append(nn.LeakyReLU(leak))
+    layers.append(nn.Conv2d(c_in, c_out, k_size, stride, pad))
     if bn:
-        layers.append(nn.BatchNorm2d(c_out).to(device))
+        layers.append(nn.BatchNorm2d(c_out))
     return nn.Sequential(*layers)
 
 ## deconv2d: nn.Conv2d with Batch Normalization and Dropout
@@ -27,28 +27,45 @@ def deconv2d(c_in, c_out, k_size=3, stride=1, pad=1, dilation=1, bn=True, dropou
         layers.append(nn.BatchNorm2d(c_out))
     if dropout:
         layers.append(nn.Dropout(p))
-    return nn.Sequential(*layers).to(device)
+    return nn.Sequential(*layers)
+
+
+def Generator(images, En, De,font_nums, embed_layer, encode_layers=False, category_num = 50, embedding_dim=128):
+    encoded_source, encode_layers = En(images)
+    font_embed = embed_layer(torch.IntTensor(font_nums).to(device))
+    font_embed = font_embed.reshape(len(font_nums), embedding_dim, 1, 1)
+    embedded = torch.cat((encoded_source, font_embed), 1)
+    fake_target = De(embedded, encode_layers)
+    if encode_layers:
+        return fake_target, encoded_source, encode_layers
+    else:
+        return fake_target, encoded_source
+
 
 # GENERATOR
 class BaseGenerator(nn.Module):
-    def __init__(self, input_dim=1, conv_dim=64, learnembed=False, category_num = 50, embedding_dim = 128):
+    def __init__(self,En, De, input_dim=1, conv_dim=64, learnembed=False, category_num = 50, embedding_dim = 128):
         super(BaseGenerator, self).__init__()
         # Encoder and Decoder
-        self.encoder_model = BaseEncoder()
+        #self.encoder_model = BaseEncoder()
+        self.encoder_model = En
         self.category_num = category_num
         self.learnembed = learnembed
-        embedding_dim = conv_dim*2
+        self.embedding_dim = conv_dim*2
         if(learnembed):
-            self.embed_layer = nn.Embedding(category_num, embedding_dim)
-        self.decoder_model = BaseDecoder()
+            self.embed_layer = nn.Embedding(category_num, self.embedding_dim)
+        #self.decoder_model = BaseDecoder()
+        self.decoder_model = De
 
     def forward(self, input, font_nums, embedding):
         encoder_result, encoder_dict = self.encoder_model(input)
         if(self.learnembed):
-            font_embed = self.embed_layer(font_nums)
+            font_embed = self.embed_layer(torch.IntTensor(font_nums).to(device))
+            font_embed = font_embed.reshape(len(font_nums), self.embedding_dim, 1, 1)
         else:
-            font_embed = get_batch_embedding(len(font_nums), font_nums, embedding, self.embedding_dim)
-        embedded = torch.cat((encoder_result, font_embed), dim=1)
+            font_embed = get_batch_embedding(len(font_nums), font_nums, embedding, self.embedding_dim).to(device)
+        embedded=torch.concat((encoder_result, font_embed),dim=1)
+        #print(embedded.shape)
         decoder_result = self.decoder_model(embedded, encoder_dict)
         return decoder_result, encoder_result
         
@@ -220,9 +237,9 @@ class Discriminator(nn.Module):
         # compute the losses:
         ## tf_loss:     loss from the image
         ## cat_loss:    loss from the category of the fonts
-        tf_loss_logit = self.fc1(output)
+        tf_loss_logit = self.fc1(output.detach())
         tf_loss = torch.sigmoid(tf_loss_logit)
-        cat_loss = self.fc2(output)
+        cat_loss = self.fc2(output.detach())
         
         return (tf_loss, tf_loss_logit, cat_loss)
         

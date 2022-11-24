@@ -3,15 +3,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw, ImageFont
 import time
-import os, random
+import os, random, sys
+sys.path.insert(0,os.getcwd())
 
 
 class FontDataProvider():
     def __init__(self,root_dir, val_ratio=0.2):
         self.root_dir = root_dir
         self.val_ratio = val_ratio
-        self.fonttype_list = open("./FontType").read().split()
-        self.letter_list = open("./LetterType").read().split()
+        self.fonttype_list = open("./Util/FontType").read().split()
+        self.letter_list = open("./Util/LetterType").read().split()
         self.all_list = self.all_loader()
         self.train_val_split()
         #self.source_list = self.all_list[0,:]
@@ -26,24 +27,28 @@ class FontDataProvider():
         return img
     
     def font_loader(self,cur_font, font_id):
-        letter_file = open("./LetterType")
-        font_path = "./GeneratedFontImage"
+        letter_file = open("./Util/LetterType")
+        font_path = "./Util/GeneratedFontImage"
         #print(os.path.basename)
         
         letter_list = letter_file.read().split()
         font_images = np.array([[0,0,0]])
         letter_id = 0
         for ch in letter_list:
-            letter_img = np.array([[font_id,letter_id,self.font_single_loader(ch, font_path, cur_font, letter_id).tolist()]])
+            letter_img = np.array([[font_id,letter_id,self.font_single_loader(ch, font_path, cur_font, letter_id).tolist()]],dtype=object)
             font_images = np.concatenate((font_images,letter_img), axis = 0)
-            #print(letter_img)
+            #print(font_id, letter_id)
+            #plt.figure(figsize=(1,2))
+            #plt.imshow(letter_img[0][2],cmap='gray')
+            #plt.show()
             letter_id+=1
-        #print(len(font_images[1:]))
+
         return font_images[1:]
 
     def all_loader(self):
         all_list = np.array([[0,0,0]])
         font_id = 0
+        print(f"{len(self.fonttype_list)} fonts loaded!")
         for tp in self.fonttype_list:
             all_list=np.concatenate((all_list, self.font_loader(tp, font_id=font_id)), axis = 0)
             font_id +=1
