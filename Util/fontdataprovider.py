@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from PIL import Image, ImageDraw, ImageFont
 import time
 import os, random, sys
+
 sys.path.insert(0,os.getcwd())
 
 
@@ -15,6 +16,8 @@ class FontDataProvider():
         self.letter_list = open("./Util/LetterType").read().split()
         self.all_list = self.all_loader()
         self.train_val_split()
+        self.list_size = len(self.all_list)
+        print(f"There are {self.list_size} data!")
         #self.source_list = self.all_list[0,:]
 
 
@@ -48,11 +51,33 @@ class FontDataProvider():
     def all_loader(self):
         all_list = np.array([[0,0,0]])
         font_id = 0
-        print(f"{len(self.fonttype_list)} fonts loaded!")
+        
         for tp in self.fonttype_list:
             all_list=np.concatenate((all_list, self.font_loader(tp, font_id=font_id)), axis = 0)
             font_id +=1
+        
+        print(f"{len(self.fonttype_list)} fonts loaded!")
         return all_list[1:]
+    
+    def shuffle_train_data(self):
+        np.random.shuffle(self.train_list)
+    
+    def save_data_provider(self):
+        save_path = "./train/dataset"
+        print("started saving font file")
+        np.save(save_path+'/'+"train_list",self.train_list, allow_pickle=True)
+        np.save(save_path+'/'+"all_list",self.all_list, allow_pickle=True)
+        np.save(save_path+'/'+"val_list",self.val_list, allow_pickle=True)
+        np.save(save_path+'/'+"source_list",self.source_list, allow_pickle=True)
+        print(f"font saved! in {save_path}")
+        
+    def load_data_provider(self, load_path):
+        self.train_list = np.load(load_path+'/train_list.npy', allow_pickle=True)
+        self.val_list = np.load(load_path+'/val_list.npy', allow_pickle=True)
+        self.all_list = np.load(load_path+'/all_list.npy', allow_pickle=True)
+        self.source_list = np.load(load_path+'/source_list.npy', allow_pickle=True)
+        self.list_size = len(self.all_list)
+        print("font_loaded!")
 
     def train_val_split(self):
         val_list = np.array([[0,0,0]])

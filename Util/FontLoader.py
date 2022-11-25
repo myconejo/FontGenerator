@@ -37,7 +37,7 @@ def font_loader(cur_font,verbose = False):
 def train_loader(batch_size, font_data_provider):
     train_imgs = font_data_provider.train_list
     source_imgs = font_data_provider.source_list
-
+    #random.shuffle(train_imgs)
     x = []
     y = []
     c_nums = []
@@ -49,18 +49,12 @@ def train_loader(batch_size, font_data_provider):
         c_nums.append(category_n)
 
         if(len(x)>=batch_size):
-            randp = list(range(len(x)))
-            random.shuffle(randp)
-            c_nums = [c_nums[i] for i in randp]
-            yield torch.FloatTensor(x)[randp], torch.FloatTensor(y)[randp], c_nums
+            yield torch.FloatTensor(x), torch.FloatTensor(y), c_nums
             x = []
             y = []
             c_nums = []
     if(len(x) !=0):
-        randp = list(range(len(x)))
-        random.shuffle(randp)
-        c_nums = [c_nums[i] for i in randp]
-        yield torch.FloatTensor(x)[randp], torch.FloatTensor(y)[randp], c_nums
+        yield torch.FloatTensor(x), torch.FloatTensor(y), c_nums
 
 def val_loader(batch_size, font_data_provider):
     val_imgs = font_data_provider.val_list

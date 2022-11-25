@@ -2,3 +2,5 @@ Util/Font/*
 Util/Font.zip
 .vscode*
 *.pt
+train/dataset/*
+results/*
