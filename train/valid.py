@@ -28,7 +28,7 @@ import os, datetime, time, glob
 batch_size = 64
 fine_tune = False
 
-def valid(category_num = 96):
+def valid(epoch,category_num = 96):
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
     else:
@@ -41,7 +41,7 @@ def valid(category_num = 96):
     Dec = BaseDecoder().to(device)
     Gen = BaseGenerator(Enc, Dec,category_num = category_num, learnembed = True).to(device) 
     Dis = Discriminator(category_num=category_num).to(device) 
-    pre_epoch = 0
+
     
     model_path = os.path.join(cur_path,"results\\ckpt\\pre_train1")
     image_path = os.path.join(cur_path,"results\\fake-image\\pre_train1")    
@@ -53,7 +53,6 @@ def valid(category_num = 96):
     Gen = BaseGenerator(Enc, Dec,category_num = category_num, learnembed = True).to(device) 
     Gen.load_state_dict(torch.load(os.path.join(model_path, f"Gencont.pt") ))
     Dis.load_state_dict(torch.load(os.path.join(model_path, f"Discont.pt") ))
-    pre_epoch = 400
     
     # Embedding
     embeddings = embedding_tensor_generate(category_num=category_num, embedding_dim=128)
@@ -157,4 +156,4 @@ def valid(category_num = 96):
             save_image(real_image.data, id_save_path_t, nrow=8, pad_value=255)
     print(f"iter:{cur_iter}, avgl1loss:{sum(l1_losses)/cur_iter}, avgconst_losses:{sum(const_losses)/cur_iter}, \
         cat_losses:{sum(d_losses)/cur_iter}, g_losses:{sum(g_losses)/cur_iter}")    
-valid(category_num=96)
+#valid(category_num=96,)

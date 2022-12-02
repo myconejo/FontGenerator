@@ -43,7 +43,7 @@ def single_font_image_saver(ch, size, save_path, font_path,n):
     h_right = size-img.shape[1]-h_left
 
     img = np.pad(img,((w_left,w_right),(h_left,h_right)), 'constant', constant_values=255)
-
+    #print(font_path)
     
     np.save(save_path+'/'+str(n)+ch,img, allow_pickle=True)
 
@@ -53,11 +53,13 @@ def single_font_image_saver(ch, size, save_path, font_path,n):
     
 def font_saver(size):
     font_file = open("./Util/FontType")
+    new_file = open("./Util/newfont")
     letter_file = open("./Util/LetterType")
+    new_list = new_file.read().split('\n')
     font_list = font_file.read().split('\n')
     letter_list = letter_file.read().split()
     
-    for cur_font in font_list:
+    for cur_font in new_list+font_list:
         font_path = "./Util/Font/" + cur_font+'.ttf'
         save_path = "./Util/GeneratedFontImage/"+cur_font
         os.makedirs(save_path, exist_ok = True)

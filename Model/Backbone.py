@@ -41,6 +41,13 @@ def Generator(images, En, De,font_nums, embed_layer, encode_layers=False, catego
     else:
         return fake_target, encoded_source
 
+class CategoryLayer(nn.Module):
+    def __init__(self, input_dim=1, category_dim=96):
+        super(CategoryLayer, self).__init__()
+        self.embedgenerate = nn.Linear(1,category_dim)
+    def forward(self, input):
+        output = self.embedgenerate(input)
+        return output
 
 # GENERATOR
 class BaseGenerator(nn.Module):
@@ -52,8 +59,7 @@ class BaseGenerator(nn.Module):
         self.category_num = category_num
         self.learnembed = learnembed
         self.embedding_dim = conv_dim*2
-        if(learnembed):
-            self.embed_layer = nn.Embedding(category_num, self.embedding_dim)
+        self.embed_layer = nn.Embedding(category_num, self.embedding_dim)
         #self.decoder_model = BaseDecoder()
         self.decoder_model = De
 

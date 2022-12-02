@@ -14,19 +14,18 @@ class FontDataProvider():
         self.val_ratio = val_ratio
         self.fonttype_list = open("./Util/FontType").read().split()
         self.letter_list = open("./Util/LetterType").read().split()
+        self.new_font = open("./Util/newfont").read().split()
         self.all_list = self.all_loader()
+        self.new_list = self.new_list_loader()
+        self.new_val_split()
         self.train_val_split()
         self.list_size = len(self.all_list)
         print(f"There are {self.list_size} data!")
-        #self.source_list = self.all_list[0,:]
 
 
     def font_single_loader(self,ch, font_path, cur_font, n):
         cur_filename = font_path+'/'+cur_font+'/'+str(n)+ch+'.npy'
         img = np.load(cur_filename)
-        #plt.figure(figsize=(1,2))
-        #plt.imshow(img,cmap='gray')
-        #plt.show()
         return img
     
     def font_loader(self,cur_font, font_id):
@@ -40,14 +39,13 @@ class FontDataProvider():
         for ch in letter_list:
             letter_img = np.array([[font_id,letter_id,self.font_single_loader(ch, font_path, cur_font, letter_id).tolist()]],dtype=object)
             font_images = np.concatenate((font_images,letter_img), axis = 0)
-            #print(font_id, letter_id)
-            #plt.figure(figsize=(1,2))
-            #plt.imshow(letter_img[0][2],cmap='gray')
-            #plt.show()
             letter_id+=1
 
         return font_images[1:]
-
+    
+    def new_list_loader(self):
+        return self.font_loader(self.new_font[0],0)
+        
     def all_loader(self):
         all_list = np.array([[0,0,0]])
         font_id = 0
@@ -78,6 +76,21 @@ class FontDataProvider():
         self.source_list = np.load(load_path+'/source_list.npy', allow_pickle=True)
         self.list_size = len(self.all_list)
         print("font_loaded!")
+        
+    def new_val_split(self):
+        new_train_list = np.array([[0,0,0]])
+        new_val_list = np.array([[0,0,0]])
+        for idx in range(len(self.new_list)):
+            cur = self.new_list[idx:idx+1]
+            #random between 0 and 1
+            r = random.random()
+            #random value bigger then val_ratio
+            if(r>0.5):
+                new_train_list = np.concatenate((new_train_list, cur), axis = 0)
+            else:
+                new_val_list = np.concatenate((new_val_list, cur), axis = 0)
+        self.new_val_list = new_val_list[1:]
+        self.new_train_list = new_train_list[1:]
 
     def train_val_split(self):
         val_list = np.array([[0,0,0]])
@@ -87,7 +100,6 @@ class FontDataProvider():
             cur = self.all_list[idx:idx+1]
             #random between 0 and 1
             r = random.random()
-            #print(cur[0][0])
             if(cur[0][0] == 0):
                 source_list = np.concatenate((source_list, cur), axis = 0)
             #random value bigger then val_ratio

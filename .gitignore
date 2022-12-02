@@ -4,3 +4,4 @@ Util/Font.zip
 *.pt
 train/dataset/*
 results/*
+Util/GeneratedFontImage/*
