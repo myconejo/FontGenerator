@@ -2,6 +2,6 @@ Util/Font/*
 Util/Font.zip
 .vscode*
 *.pt
-train/dataset/*
+train/dataset/*.npy
 results/*
 Util/GeneratedFontImage/*

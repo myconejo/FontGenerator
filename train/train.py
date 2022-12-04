@@ -317,5 +317,5 @@ def train(cont_learn=False, epoch=400, category_num = 96):
         torch.save([l1_losses, const_losses, cat_losses, d_losses, g_losses], os.path.join(model_path, f"losses.pt"))
         torch.save(validation, os.path.join(model_path, f"validation.pt"))
             
-train(cont_learn=True, epoch=2000, category_num = 96)
+train(cont_learn=False, epoch=2000, category_num = 96)
 #train(cont_learn=False, epoch=2000, category_num = 79)

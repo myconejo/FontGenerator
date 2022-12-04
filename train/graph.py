@@ -6,7 +6,7 @@ cur_path = os.getcwd()
 sys.path.insert(0,cur_path)
 import numpy as np
 
-loss_path = os.path.join(cur_path,"results\\ckpt\\pre_train3")
+loss_path = os.path.join(cur_path,"results\\ckpt\\pre_train")
 
 loss = torch.load(os.path.join(loss_path, "losses.pt"))
 loss=np.array(loss).T

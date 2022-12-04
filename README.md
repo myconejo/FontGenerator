@@ -6,19 +6,27 @@ The objective of the project is to make a new font by using the model. Making a 
 
 ### Set conda environment
 ```
+$ cd ./FontGenerator
 $ conda env create --file conda_requirements.yaml
+$ conda activate FontProject
+
 ```
 ### Make Directory
 ```
+$ mkdir ./results
 $ mkdir ./results/ckpt
 $ mkdir ./results/ckpt/pre_train
+$ mkdir ./results/ckpt/finetune
 $ mkdir ./results/fake-image/pre_train
 $ mkdir ./results/fake-image/pre_train/valid
+$ mkdir ./results/fake-image/finetune
+$ mkdir ./results/fake-image/finetune/valid
 ```
-### 1. Install Font files
+### 1. Install Font files and convert to images
 ```
 https://drive.google.com/file/d/1iRYDXJbH_x4Kabr52LudkvE8JnspLaN6/view?usp=sharing
 Extract font files in Util/Font
+$ python Util/FontImageGerator.py
 ```
 ### 2. Install Pretrain model file
 ```
@@ -27,16 +35,24 @@ Extract font files in ./results/ckpt/pre_train
 ```
 ### 3. Pretrain
 If trying to reproduce pretrain model
+If don't trying to train and just use trained model parameters pass.
 ```
 $ python ./train/train.py
 ```
 
-### 4. Finetuning
+### 4. Pretrain Validation(Inference)
+```
+$ python ./train/valid.py
+```
+validation results are in results/pre_train/valid-*.png
+Target results are results/pre_train/valid-treu-*.png
+
+### 5. Finetuning
 ```
 $ python ./train/finetune.py
 ```
 
-### 5. Result Images
+### 6. Result Images
 ```
 Check images in ./results/fake-image/finetune
 ```

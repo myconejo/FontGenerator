@@ -38,8 +38,8 @@ def interpolation(category_num=96):
     Gen = BaseGenerator(Enc, Dec,category_num = category_num, learnembed = False).to(device) 
     Dis = Discriminator(category_num=category_num).to(device) 
     
-    model_path = os.path.join(cur_path,"results\\ckpt\\pre_train4")
-    image_path = os.path.join(cur_path,"results\\fake-image\\pre_train4")
+    model_path = os.path.join(cur_path,"results\\ckpt\\pre_train")
+    image_path = os.path.join(cur_path,"results\\fake-image\\pre_train")
     
     
     print(f"Model Path:{model_path}, Image Path:{image_path}")

@@ -28,7 +28,7 @@ import os, datetime, time, glob
 batch_size = 64
 fine_tune = False
 
-def valid(epoch,category_num = 96):
+def valid(category_num = 96):
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
     else:
@@ -43,16 +43,16 @@ def valid(epoch,category_num = 96):
     Dis = Discriminator(category_num=category_num).to(device) 
 
     
-    model_path = os.path.join(cur_path,"results\\ckpt\\pre_train1")
-    image_path = os.path.join(cur_path,"results\\fake-image\\pre_train1")    
+    model_path = os.path.join(cur_path,"results\\ckpt\\pre_train")
+    image_path = os.path.join(cur_path,"results\\fake-image\\pre_train")    
     
     print(f"Model Path:{model_path}, Image Path:{image_path}")    
 
-    Enc.load_state_dict(torch.load(os.path.join(model_path, f"Enccont.pt")))
-    Dec.load_state_dict(torch.load(os.path.join(model_path, f"Deccont.pt")))
+    Enc.load_state_dict(torch.load(os.path.join(model_path, f"Enctest.pt")))
+    Dec.load_state_dict(torch.load(os.path.join(model_path, f"Dectest.pt")))
     Gen = BaseGenerator(Enc, Dec,category_num = category_num, learnembed = True).to(device) 
-    Gen.load_state_dict(torch.load(os.path.join(model_path, f"Gencont.pt") ))
-    Dis.load_state_dict(torch.load(os.path.join(model_path, f"Discont.pt") ))
+    Gen.load_state_dict(torch.load(os.path.join(model_path, f"Gentest.pt") ))
+    Dis.load_state_dict(torch.load(os.path.join(model_path, f"Distest.pt") ))
     
     # Embedding
     embeddings = embedding_tensor_generate(category_num=category_num, embedding_dim=128)
@@ -139,21 +139,13 @@ def valid(epoch,category_num = 96):
         cat_losses.append(int(cat_loss.data))
         d_losses.append(int(D_loss.data))
         g_losses.append(int(G_loss.data))
-        
-        # Log
-        
-        #if (id + 1) % log_step == 0:
-        
-        #log_string = f"step[{id}], l1_loss: {l1_loss.item()}, d_loss: {D_loss.item()}, g_loss: {G_loss.item()}"
-        #print(log_string)
 
         # Save Images
-        #if (id + 1) % 350 == 0:
-        if(id) %5 == 0:
+        if(id) %1 == 0:
             id_save_path = os.path.join(image_path, "valid-%d.png" % (id))
             id_save_path_t = os.path.join(image_path, "valid-true-%d.png" % (id))
             save_image(fake_image.data, id_save_path, nrow=8, pad_value=255)
             save_image(real_image.data, id_save_path_t, nrow=8, pad_value=255)
     print(f"iter:{cur_iter}, avgl1loss:{sum(l1_losses)/cur_iter}, avgconst_losses:{sum(const_losses)/cur_iter}, \
         cat_losses:{sum(d_losses)/cur_iter}, g_losses:{sum(g_losses)/cur_iter}")    
-#valid(category_num=96,)
+valid(category_num=96)
