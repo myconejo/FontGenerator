@@ -41,13 +41,13 @@ def finetune(cont_learn=False, epoch=1000, category_num = 96):
     Dis = Discriminator(category_num=category_num).to(device) 
     pre_epoch = 0
     
-    model_path = os.path.join(cur_path,"results\\ckpt\\finetune4")
-    image_path = os.path.join(cur_path,"results\\fake-image\\finetune4")
+    model_path = os.path.join(cur_path,"results\\ckpt\\finetune")
+    image_path = os.path.join(cur_path,"results\\fake-image\\finetune")
     
     
     print(f"Model Path:{model_path}, Image Path:{image_path}")
     
-    tmodel_path = os.path.join(cur_path,"results\\ckpt\\pre_train4")
+    tmodel_path = os.path.join(cur_path,"results\\ckpt\\pre_train")
     
 
     Enc.load_state_dict(torch.load(os.path.join(tmodel_path, f"Enctest.pt")))
@@ -64,10 +64,10 @@ def finetune(cont_learn=False, epoch=1000, category_num = 96):
     
     
     #Disable some parameters if needed
-    #for name, param in Gen.named_parameters():
-        #if 'encoder' in name:
+    for name, param in Gen.named_parameters():
+        if 'encoder' in name:
             #print("disabled")
-            #param.requires_grad = False
+            param.requires_grad = False
     
     # Optimization for generator and discriminators
     G_optimizer = optim.Adam(Gen.parameters(), lr=learning_rate,betas=(0.5,0.999))
@@ -308,4 +308,4 @@ def finetune(cont_learn=False, epoch=1000, category_num = 96):
         torch.save([l1_losses, const_losses, cat_losses, d_losses, g_losses], os.path.join(model_path, f"losses.pt"))
         torch.save(validation, os.path.join(model_path, f"validation.pt"))
 
-finetune(cont_learn=False, epoch=1000, category_num = 79)
+finetune(cont_learn=False, epoch=1000, category_num = 96)

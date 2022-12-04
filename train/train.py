@@ -42,8 +42,8 @@ def train(cont_learn=False, epoch=400, category_num = 96):
     Dis = Discriminator(category_num=category_num).to(device) 
     pre_epoch = 0
     
-    model_path = os.path.join(cur_path,"results\\ckpt\\pre_train4")
-    image_path = os.path.join(cur_path,"results\\fake-image\\pre_train4")
+    model_path = os.path.join(cur_path,"results\\ckpt\\pre_train")
+    image_path = os.path.join(cur_path,"results\\fake-image\\pre_train")
     
     
     print(f"Model Path:{model_path}, Image Path:{image_path}")
@@ -291,7 +291,7 @@ def train(cont_learn=False, epoch=400, category_num = 96):
                 
                 
                 # Save Images
-                val_image_path = os.path.join(cur_path,"results\\fake-image\\pre_train4\\valid")
+                val_image_path = os.path.join(cur_path,"results\\fake-image\\pre_train\\valid")
                 if(id) %5 == 0:
                     id_save_path = os.path.join(val_image_path, "valid-%d-%d.png" % (cur_epoch+pre_epoch, id))
                     id_save_path_t = os.path.join(val_image_path, "valid-true-%d-%d.png" % (cur_epoch+pre_epoch, id))
@@ -317,5 +317,5 @@ def train(cont_learn=False, epoch=400, category_num = 96):
         torch.save([l1_losses, const_losses, cat_losses, d_losses, g_losses], os.path.join(model_path, f"losses.pt"))
         torch.save(validation, os.path.join(model_path, f"validation.pt"))
             
-#train(cont_learn=True, epoch=1000, category_num = 96)
-train(cont_learn=False, epoch=2000, category_num = 79)
+train(cont_learn=True, epoch=2000, category_num = 96)
+#train(cont_learn=False, epoch=2000, category_num = 79)
