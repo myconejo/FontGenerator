@@ -1,5 +1,9 @@
+####
+#Experiment for interpolation 
+#
+#####
 import numpy as np
-import os, datetime, time, glob
+import os
 import sys
 cur_path = os.getcwd()
 sys.path.insert(0,cur_path)
@@ -7,7 +11,6 @@ sys.path.insert(0,cur_path)
 from Model.Backbone import BaseGenerator, Discriminator, BaseEncoder, SimpleDecoder, SimpleEncoder, BaseDecoder
 from Util.fontdataprovider import FontDataProvider
 from Model.Embedding import embedding_tensor_generate, get_batch_embedding
-from Util.FontLoader import train_loader, val_loader
 
 
 from tqdm import tqdm
@@ -18,11 +21,6 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torchvision.utils import save_image
-import random
-
-
-import numpy as np
-import os, datetime, time, glob
 
 batch_size = 64
 fine_tune = False
@@ -35,13 +33,10 @@ def interpolation(category_num=96):
         device = torch.device('cpu')
 
     # Define the models
-    
     Enc = BaseEncoder().to(device) 
-    #embed_layer = nn.Embedding(category_num, 128)
     Dec = BaseDecoder().to(device)
     Gen = BaseGenerator(Enc, Dec,category_num = category_num, learnembed = False).to(device) 
     Dis = Discriminator(category_num=category_num).to(device) 
-    pre_epoch = 0
     
     model_path = os.path.join(cur_path,"results\\ckpt\\pre_train4")
     image_path = os.path.join(cur_path,"results\\fake-image\\pre_train4")
@@ -69,7 +64,6 @@ def interpolation(category_num=96):
     x=[]
     for i in range(len(source_list)):
         x.append(source_list[i])
-    #print(f"shape:{x.shape}")
     x=torch.FloatTensor(x)
     print(f"shape:{x.shape}")
     for i in range(5):

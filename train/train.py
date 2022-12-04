@@ -19,7 +19,6 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torchvision.utils import save_image
 from torchsummary import summary
-import random
 
 
 import numpy as np
@@ -38,7 +37,6 @@ def train(cont_learn=False, epoch=400, category_num = 96):
     # Define the models
     
     Enc = BaseEncoder().to(device) 
-    #embed_layer = nn.Embedding(category_num, 128)
     Dec = BaseDecoder().to(device)
     Gen = BaseGenerator(Enc, Dec,category_num = category_num, learnembed = False).to(device) 
     Dis = Discriminator(category_num=category_num).to(device) 
@@ -53,14 +51,10 @@ def train(cont_learn=False, epoch=400, category_num = 96):
     if(cont_learn):
         Enc.load_state_dict(torch.load(os.path.join(model_path, f"Enctest.pt")))
         Dec.load_state_dict(torch.load(os.path.join(model_path, f"Dectest.pt")))
-        #Gen = BaseGenerator(Enc, Dec,category_num = category_num, learnembed = True).to(device) 
         Gen.load_state_dict(torch.load(os.path.join(model_path, f"Gentest.pt") ))
         Dis.load_state_dict(torch.load(os.path.join(model_path, f"Distest.pt") ))
         pre_epoch = 1000
     
-    #summary(Gen,(1,128,128))
-    summary(Enc, (1,128,128))
-    summary(Dis,(2,128,128))
 
     input_fonts = []
     source_dataset = []
@@ -76,8 +70,8 @@ def train(cont_learn=False, epoch=400, category_num = 96):
     
     # Optimization for generator and discriminators
     G_optimizer = optim.Adam(Gen.parameters(), lr=learning_rate,betas=(0.5,0.999))
-    #G_optimizer = optim.Adam(list(Enc.parameters())+list(Dec.parameters()), lr=learning_rate,betas=(0.5,0.999))
     D_optimizer = optim.Adam(Dis.parameters(), lr=learning_rate,betas=(0.5,0.999))
+    
     #Scheduling optimizers with given milestones
     print(f"Current Learning Rate is {G_optimizer.param_groups[0]['lr']}")
     
@@ -101,8 +95,7 @@ def train(cont_learn=False, epoch=400, category_num = 96):
     new_data = True
     font_data_provider = FontDataProvider(".")
     
-    
-    #train_dataloader = train_loader(batch_size=batch_size, font_data_provider=font_data_provider)
+
     if(new_data and not cont_learn):
         font_data_provider.save_data_provider()
     else:
@@ -110,9 +103,6 @@ def train(cont_learn=False, epoch=400, category_num = 96):
     print(f"font lists:{font_data_provider.fonttype_list}")
     
     for cur_epoch in (pbar:=tqdm(range(epoch))):
-    #for cur_epoch in range(epoch):
-        # Penalties for generator's losses
-
         Lcategory_penalty = 1
         if(cur_epoch+pre_epoch >500):
             Lconst_penalty=1000
@@ -122,7 +112,6 @@ def train(cont_learn=False, epoch=400, category_num = 96):
             L1_penalty = 500 
 
         # Iterable dataset
-        #random.shuffle(font_data_provider.train_list)
         font_data_provider.shuffle_train_data()
         train_dataloader = train_loader(batch_size=batch_size, font_data_provider=font_data_provider)
 
@@ -207,21 +196,17 @@ def train(cont_learn=False, epoch=400, category_num = 96):
             g_losses.append(int(G_loss.data))
             
             # Log
-            
-            #if (id + 1) % log_step == 0:
             if (id) == 0:
                 log_string = f"Epoch[{cur_epoch+pre_epoch+1}/{epoch+pre_epoch}], step[{id}], l1_loss: {l1_loss.item()}, d_loss: {D_loss.item()}, g_loss: {G_loss.item()}"
                 pbar.set_description(log_string)
-                #print(log_string)
 
             # Save Images
-            #if (id + 1) % 350 == 0:
             if (cur_epoch==0 or (cur_epoch+1) % 5==0) and (id) == 0:
                 id_save_path = os.path.join(image_path, "fake-img-%d-%d.png" % (cur_epoch+pre_epoch+1, id))
                 id_save_path_t = os.path.join(image_path, "true-img-%d-%d.png" % (cur_epoch+pre_epoch+1, id))
                 save_image(fake_image.data, id_save_path, nrow=8, pad_value=255)
                 save_image(real_image.data, id_save_path_t, nrow=8, pad_value=255)
-                #print(font_nums)
+
         if(not cont_learn):   
             #update scheduler
             G_scheduler.step()
@@ -231,8 +216,6 @@ def train(cont_learn=False, epoch=400, category_num = 96):
         if cur_epoch==0 or (cur_epoch+1)%50==0:
             # Save Checkpoints
             now = datetime.datetime.now()
-            now_date = now.strftime("%m-%d")
-            now_time = now.strftime('%H:%M')
             torch.save(Enc.state_dict(), os.path.join(model_path, f"Enctestmid.pt"))
             torch.save(Dec.state_dict(), os.path.join(model_path, f"Dectestmid.pt"))
             torch.save(Gen.state_dict(), os.path.join(model_path, f"Gentestmid.pt"))
@@ -256,10 +239,7 @@ def train(cont_learn=False, epoch=400, category_num = 96):
                 # Init Dis params to zeros
                     
                 # Generate fake image from the generator
-                fake_image, encoded_source = Gen(x, font_nums=font_nums, embedding=embeddings)
-                    
-                #fake_image, encoded_source,_ = Generator(x,Enc,Dec,font_nums=font_nums,embed_layer=embed_layer, category_num=category_num)
-                    
+                fake_image, encoded_source = Gen(x, font_nums=font_nums, embedding=embeddings)                    
                                 
                 # Concatenate the input and the generated fake image, and get the discrimimator losses
                 fake_patch = torch.cat([x, fake_image], dim=1)
@@ -309,15 +289,8 @@ def train(cont_learn=False, epoch=400, category_num = 96):
                 d_losses.append(int(D_loss.data))
                 g_losses.append(int(G_loss.data))
                 
-                # Log
                 
-                #if (id + 1) % log_step == 0:
-                
-                #log_string = f"step[{id}], l1_loss: {l1_loss.item()}, d_loss: {D_loss.item()}, g_loss: {G_loss.item()}"
-                #print(log_string)
-
                 # Save Images
-                #if (id + 1) % 350 == 0:
                 val_image_path = os.path.join(cur_path,"results\\fake-image\\pre_train4\\valid")
                 if(id) %5 == 0:
                     id_save_path = os.path.join(val_image_path, "valid-%d-%d.png" % (cur_epoch+pre_epoch, id))
@@ -325,13 +298,10 @@ def train(cont_learn=False, epoch=400, category_num = 96):
                     save_image(fake_image.data, id_save_path, nrow=8, pad_value=255)
                     save_image(real_image.data, id_save_path_t, nrow=8, pad_value=255)
                 validation.append([sum(l1_losses)/cur_iter,sum(const_losses)/cur_iter,sum(d_losses)/cur_iter,sum(g_losses)/cur_iter])
-            #print(f"iter:{cur_iter}, avgl1loss:{sum(l1_losses)/cur_iter}, avgconst_losses:{sum(const_losses)/cur_iter}, \
-            #    cat_losses:{sum(d_losses)/cur_iter}, g_losses:{sum(g_losses)/cur_iter}")
+
         
     # Save Checkpoints
     now = datetime.datetime.now()
-    now_date = now.strftime("%m-%d")
-    now_time = now.strftime('%H:%M')
     if(cont_learn):
         torch.save(Enc.state_dict(), os.path.join(model_path, f"Enccont.pt"))
         torch.save(Dec.state_dict(), os.path.join(model_path, f"Deccont.pt"))

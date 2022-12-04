@@ -1,8 +1,4 @@
-#from torch.utils.data import Dataset, DataLoader
 import numpy as np
-import matplotlib.pyplot as plt
-from PIL import Image, ImageDraw, ImageFont
-import time
 import os, random, sys
 
 sys.path.insert(0,os.getcwd())
@@ -31,7 +27,6 @@ class FontDataProvider():
     def font_loader(self,cur_font, font_id):
         letter_file = open("./Util/LetterType")
         font_path = "./Util/GeneratedFontImage"
-        #print(os.path.basename)
         
         letter_list = letter_file.read().split()
         font_images = np.array([[0,0,0]])
