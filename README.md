@@ -8,15 +8,22 @@ The objective of the project is to make a new font by using the model. Making a 
 ```
 $ conda env create --file conda_requirements.yaml
 ```
-
+### Make Directory
+```
+$ mkdir ./results/ckpt
+$ mkdir ./results/ckpt/pre_train
+$ mkdir ./results/fake-image/pre_train
+$ mkdir ./results/fake-image/pre_train/valid
+```
 ### 1. Install Font files
 ```
 https://drive.google.com/file/d/1iRYDXJbH_x4Kabr52LudkvE8JnspLaN6/view?usp=sharing
-extract font files in Util/Font
+Extract font files in Util/Font
 ```
 ### 2. Install Pretrain model file
 ```
-extract font files in ./results/ckpt/pre_train
+https://drive.google.com/file/d/1nu4fKGHy5HVb_s_k425R8LquvBHgXxVJ/view?usp=share_link
+Extract font files in ./results/ckpt/pre_train
 ```
 ### 3. Pretrain
 If trying to reproduce pretrain model
