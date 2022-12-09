@@ -68,6 +68,8 @@ $ python ./main.py
 ```
 
 ## Training Results
+<center>
+
 ||Train|Validation|Finetuning|
 |------|---|---|---|
 |L1 loss (x100)|0.3913|1.1322|0.0674|
