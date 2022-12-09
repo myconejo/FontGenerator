@@ -14,7 +14,6 @@ The objective of the project is to make a new font by using the model. Making a 
 $ cd ./FontGenerator
 $ conda env create --file conda_requirements.yaml
 $ conda activate FontProject
-
 ```
 ### Make Directory
 ```
