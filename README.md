@@ -3,7 +3,9 @@ Alphabet font generator using GAN, inspired from zi2zi, pix2pix and other simila
 (Experimented in Windows11 / RTX2070super / RAM 16GB)
 
 ## Project Objective
-The objective of the project is to make a new font by using the model. Making a new font style is a very expensive job. Also, there needs to be a lot of creativity to implement new fonts. In the case of the alphabet, there are 52 letters and more than 30 signs need to be defined by the font file. By generating a new image of letters and signs which adopt the new style of font or human font style, we can reduce the costs to make new fonts. According to GAN’s style interpolation, we may create new kinds of fonts which separately adapt different fonts’ styles. 
+The objective of out project is to make a GAN model that learns font styles from other pre-existing fonts. Making a new font style is a very difficult task but generative adversarial network (GAN) can reduce the time cost. There are several prior researches proving that GAN is a good style transfer model. 
+We trained the GAN model to generate a font image, where the generator creates a fake image and the discriminator distinguishes whether it is generated. With pre-training and fine-tuning the model, we were able to train the model to learn the font styles. Through this, it can be assured that GAN has a potential to simplify the font style production work by creating the entire font data with only a small number of font data.
+
 
 ## Implementation
 <img src="./imgs/Implementation.png">
@@ -68,13 +70,13 @@ $ python ./main.py
 ```
 
 ## Training Results
-<center>
+<div align="center">
 
 ||Train|Validation|Finetuning|
 |------|---|---|---|
 |L1 loss (x100)|0.3913|1.1322|0.0674|
 
-</center>
+</div>
 
 
 ### Training(80%) and Validation(20%)
