@@ -34,10 +34,10 @@ https://drive.google.com/file/d/1iRYDXJbH_x4Kabr52LudkvE8JnspLaN6/view?usp=shari
 Extract font files in Util/Font
 $ python Util/FontImageGerator.py
 ```
-### 2. Install Pretrain model file
+### 2. Install Pretrained model files
 ```
 https://drive.google.com/file/d/1nu4fKGHy5HVb_s_k425R8LquvBHgXxVJ/view?usp=share_link
-Extract font files in ./results/ckpt/pre_train
+Extract model files in ./results/ckpt/pre_train
 ```
 ### 3. Pretrain
 If trying to reproduce pretrain model
@@ -51,7 +51,7 @@ $ python ./train/train.py
 $ python ./train/valid.py
 ```
 validation results are in results/pre_train/valid-*.png
-Target results are results/pre_train/valid-treu-*.png
+Target results are results/pre_train/valid-true-*.png
 
 ### 5. Finetuning
 ```
@@ -63,7 +63,15 @@ $ python ./train/finetune.py
 Check images in ./results/fake-image/finetune
 ```
 
+### 7. Evaluation Table
+```
+$ python ./main.py
+```
+
 ## Training Results
+||Train|Validation|Finetuning|
+|------|---|---|---|
+|L1 loss (x100)|0.3913|1.2249|0.0674|
 ### Training(80%) and Validation(20%)
 <img src="./imgs/Results1.png">
 
@@ -72,6 +80,8 @@ Check images in ./results/fake-image/finetune
 
 ### Finetunning Results - Italic Calibri
 <img src="./imgs/Finetuning_ical.png">
+
+
 
 ## References
 * [**zi2zi**](https://github.com/kaonashi-tyc/zi2zi/)
