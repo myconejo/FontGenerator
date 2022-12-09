@@ -16,7 +16,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-from torch.utils.data import DataLoader
 from torchvision.utils import save_image
 from torchsummary import summary
 
@@ -28,7 +27,7 @@ import os, datetime, time, glob
 batch_size = 64
 fine_tune = False
 
-def train(cont_learn=False, epoch=400, category_num = 96):
+def train(cont_learn=False, epoch=2000, category_num = 96):
     if torch.cuda.is_available():
         device = torch.device('cuda:0')
     else:
