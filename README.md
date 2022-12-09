@@ -74,6 +74,9 @@ $ python ./main.py
 |------|---|---|---|
 |L1 loss (x100)|0.3913|1.1322|0.0674|
 
+</center>
+
+
 ### Training(80%) and Validation(20%)
 <img src="./imgs/Results1.png">
 
