@@ -71,7 +71,7 @@ $ python ./main.py
 ## Training Results
 ||Train|Validation|Finetuning|
 |------|---|---|---|
-|L1 loss (x100)|0.3913|1.2249|0.0674|
+|L1 loss (x100)|0.3913|1.1322|0.0674|
 ### Training(80%) and Validation(20%)
 <img src="./imgs/Results1.png">
 
